@@ -41,8 +41,12 @@
       cursor: pointer;
       min-width: 130px;
     }
-    button:hover {
+    button:hover:not(:disabled) {
       background-color: #b71c1c;
+    }
+    button:disabled {
+      background-color: #888;
+      cursor: not-allowed;
     }
     input {
       padding: 8px;
@@ -76,21 +80,23 @@
     let stream;
 
     // Start camera (rear by default)
-    document.getElementById('startBtn').addEventListener('click', async () => {
-      try {
-        const constraints = { video: { facingMode: { exact: "environment" } } };
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = stream;
-      } catch (err) {
-        // fallback to any available camera
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          video.srcObject = stream;
-        } catch (error) {
-          alert('Camera access denied or not available.');
-        }
+document.getElementById('generateBtn').addEventListener('click', () => {
+  const number = numberInput.value.trim();
+  if (number.match(/^215\d{5}$/)) {
+    generateBarcode(number);
+    // Stop camera after small delay
+    setTimeout(() => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
       }
-    });
+    }, 500);
+    // Disable Start button
+    document.getElementById('startBtn').disabled = true;
+  } else {
+    alert('Enter valid 8-digit number starting with 215');
+  }
+});
 
     // OCR scan for 215xxxxx pattern
     document.getElementById('scanBtn').addEventListener('click', async () => {
@@ -127,10 +133,12 @@
     });
 
     // Clear fields
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      numberInput.value = '';
-      barcodeEl.innerHTML = '';
-    });
+document.getElementById('clearBtn').addEventListener('click', () => {
+  numberInput.value = '';
+  barcodeEl.innerHTML = '';
+  // Re-enable Start button
+  document.getElementById('startBtn').disabled = false;
+});
 
     // Barcode generator
     function generateBarcode(number) {
@@ -146,6 +154,7 @@
   </script>
 </body>
 </html>
+
 
 
 
