@@ -70,25 +70,22 @@
       video.srcObject = null;
     };
 
-    captureBtn.onclick = async () => {
-      if (!stream) return alert('Start camera first!');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      ocrLog.textContent = 'Running OCR...';
-      try {
-        const { data } = await Tesseract.recognize(canvas, 'eng');
-        const nums = data.text.match(/[0-9]{4,}/g) || [];
-        numberInput.value = nums.length ? nums[0] : (data.text.match(/[0-9]+/g)||[]).join('');
-        ocrLog.textContent = 'OCR complete';
-      } catch (e) {
-        ocrLog.textContent = 'OCR failed: ' + e.message;
-      }
-    };
-
-    generateBtn.onclick = () => {
-      if (!numberInput.value) return alert('Enter or scan a number first');
+captureBtn.onclick = async () => {
+  if (!stream) return alert('Start camera first!');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  ocrLog.textContent = 'Running OCR...';
+  try {
+    const { data } = await Tesseract.recognize(canvas, 'eng');
+    // Match numbers starting with 215 and 8 digits long
+    const matches = data.text.match(/\b215[0-9]{5}\b/g) || [];
+    if (matches.length > 0) {
+      numberInput.value = matches[0]; // pick the first valid match
+      ocrLog.textContent = 'OCR complete: Found valid number';
+      
+      // Automatically generate the barcode
       JsBarcode(barcodeEl, numberInput.value, {
         format: document.getElementById('formatSelect').value,
         displayValue: true,
@@ -97,7 +94,33 @@
         height: 80,
         margin: 8
       });
-    };
+      
+    } else {
+      numberInput.value = '';
+      barcodeEl.innerHTML = ''; // clear barcode if no valid number
+      ocrLog.textContent = 'OCR complete: No valid 8-digit number starting with 215 found';
+    }
+  } catch (e) {
+    ocrLog.textContent = 'OCR failed: ' + e.message;
+  }
+};
+
+// Optional: still allow manual generate button if user types a number
+generateBtn.onclick = () => {
+  if (!numberInput.value) return alert('Enter or scan a valid number first');
+  // Only generate if it starts with 215 and is 8 digits
+  if (!/^215\d{5}$/.test(numberInput.value)) {
+    return alert('Number must start with 215 and be 8 digits long');
+  }
+  JsBarcode(barcodeEl, numberInput.value, {
+    format: document.getElementById('formatSelect').value,
+    displayValue: true,
+    fontSize: 18,
+    width: 2,
+    height: 80,
+    margin: 8
+  });
+};
   </script>
 </body>
 </html>
