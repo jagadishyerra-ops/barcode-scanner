@@ -20,8 +20,6 @@
     <option value="environment">Rear Camera</option>
     <option value="user">Front Camera</option>
   </select>
-  <button id="startBtn">Start Camera</button>
-  <button id="stopBtn">Stop Camera</button>
   <button id="captureBtn">Capture & OCR</button><br>
 
   <input type="text" id="numberInput" placeholder="Detected or enter number"><br>
@@ -32,6 +30,8 @@
     <option value="CODE39">Code 39</option>
   </select>
   <button id="generateBtn">Generate Barcode</button>
+  <button id="clearBtn">Clear</button>
+  <button id="downloadBtn">Download Barcode</button>
 
   <svg id="barcode"></svg>
   <canvas id="captureCanvas" style="display:none;"></canvas>
@@ -41,73 +41,11 @@
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <script>
     const video = document.getElementById('video');
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
     const captureBtn = document.getElementById('captureBtn');
     const numberInput = document.getElementById('numberInput');
     const generateBtn = document.getElementById('generateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
     const barcodeEl = document.getElementById('barcode');
     const canvas = document.getElementById('captureCanvas');
-    const facingSelect = document.getElementById('facingSelect');
-    const ocrLog = document.getElementById('ocrLog');
-
-    let stream = null;
-
-    startBtn.onclick = async () => {
-      if (stream) return;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingSelect.value } });
-        video.srcObject = stream;
-      } catch (e) {
-        alert('Camera error: ' + e.message);
-      }
-    };
-
-    stopBtn.onclick = () => {
-      if (!stream) return;
-      stream.getTracks().forEach(t => t.stop());
-      stream = null;
-      video.srcObject = null;
-    };
-
-captureBtn.onclick = async () => {
-  if (!stream) return alert('Start camera first!');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  ocrLog.textContent = 'Running OCR...';
-  ocrLog.style.color = 'black';
-  try {
-    const { data } = await Tesseract.recognize(canvas, 'eng');
-    // Match numbers starting with 215 and 8 digits long
-    const matches = data.text.match(/\b215[0-9]{5}\b/g) || [];
-    if (matches.length > 0) {
-      numberInput.value = matches[0]; // pick the first valid match
-      ocrLog.textContent = '✅ Valid number detected!';
-      ocrLog.style.color = 'green';
-      
-      // Automatically generate the barcode
-      JsBarcode(barcodeEl, numberInput.value, {
-        format: document.getElementById('formatSelect').value,
-        displayValue: true,
-        fontSize: 18,
-        width: 2,
-        height: 80,
-        margin: 8
-      });
-      
-    } else {
-      numberInput.value = '';
-      barcodeEl.innerHTML = ''; // clear barcode if no valid number
-      ocrLog.textContent = '❌ No valid 8-digit number starting with 215 found';
-      ocrLog.style.color = 'red';
-    }
-  } catch (e) {
-    ocrLog.textContent = 'OCR failed: ' + e.message;
-    ocrLog.style.color = 'red';
-  }
-};
-  </script>
-</body>
-</html>
+    const facingSe
