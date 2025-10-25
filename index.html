@@ -55,14 +55,17 @@
 
     let stream = null;
 
-    // Start camera on button click
+    // Start camera on button click (works reliably on mobile)
     startBtn.onclick = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingSelect.value } });
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: facingSelect.value }
+        });
         video.srcObject = stream;
-        startBtn.style.display = 'none'; // hide button after starting camera
-      } catch (e) {
-        alert('Camera error: ' + e.message);
+        await video.play();
+        startBtn.style.display = "none"; // hide button after starting
+      } catch (err) {
+        alert("Camera not available or permission denied: " + err.message);
       }
     };
 
@@ -73,4 +76,5 @@
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      ocrLo
+      ocrLog.textContent = 'Running OCR...';
+      o
