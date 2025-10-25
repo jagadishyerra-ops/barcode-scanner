@@ -15,13 +15,14 @@
     }
     h1 {
       color: #333;
-      margin-top: 5px;
+      margin-top: 2px;
+       font-size: 12px;
     }
     video {
       border: 2px solid #333;
       border-radius: 10px;
       width: 320px;
-      height: 180px;
+      height: 120px;
       object-fit: cover;
       margin-top: 10px;
     }
@@ -54,7 +55,7 @@
 
   <img src="https://logoeps.com/wp-content/uploads/2012/11/deutz-logo-vector.png" 
        alt="Deutz Logo" style="width:100px; margin-bottom:5px;">
-  <h1>📷 Serial# Barcode</h1>
+  <h1> Serial# Barcode Generator</h1>
 
   <video id="camera" autoplay playsinline></video><br>
   <button id="startBtn">Start Camera</button>
@@ -73,15 +74,27 @@
     const barcodeEl = document.getElementById('barcode');
     let stream;
 
-    // Start camera
-    document.getElementById('startBtn').addEventListener('click', async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-      } catch (err) {
-        alert('Camera access denied or not available.');
+// Start camera (rear by default)
+document.getElementById('startBtn').addEventListener('click', async () => {
+  try {
+    const constraints = {
+      video: {
+        facingMode: { exact: "environment" } // Try rear camera
       }
-    });
+    };
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+  } catch (err) {
+    // Fallback if environment camera not available
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+    } catch (error) {
+      alert('Camera access denied or not available.');
+    }
+  }
+});
+
 
     // Stop camera
     document.getElementById('stopBtn').addEventListener('click', () => {
@@ -139,3 +152,4 @@
   </script>
 </body>
 </html>
+
