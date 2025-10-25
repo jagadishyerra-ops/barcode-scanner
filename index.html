@@ -106,12 +106,13 @@
 
       const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
       const match = text.match(/215\d{5}/); // matches 215 + 5 digits (total 8)
-      if (match) {
-        numberInput.value = match[0];
-        generateBarcode(match[0]);
-      } else {
-        alert('No valid 215xxxxx number detected.');
-      }
+if (match) {
+  numberInput.value = match[0];
+  alert('Number detected: ' + match[0]);
+} else {
+  alert('No valid 215xxxxx number detected.');
+}
+
     });
 
     // Generate barcode and stop camera
@@ -151,3 +152,4 @@
   </script>
 </body>
 </html>
+
