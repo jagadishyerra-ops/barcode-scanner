@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-6" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Serial# Barcode Generator</title>
+  <title>Serial# Barcode</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
@@ -15,14 +15,15 @@
     }
     h1 {
       color: #333;
-      margin-top: 2px;
-       font-size: 28px;
+      margin-top: 5px;
+      font-size: 28px;
+      font-weight: bold;
     }
     video {
       border: 2px solid #333;
       border-radius: 10px;
       width: 320px;
-      height: 120px;
+      height: 240px;
       object-fit: cover;
       margin-top: 10px;
     }
@@ -38,6 +39,7 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
+      min-width: 130px;
     }
     button:hover {
       background-color: #b71c1c;
@@ -53,17 +55,17 @@
 </head>
 <body>
 
-  <img src="https://logoeps.com/wp-content/uploads/2012/11/deutz-logo-vector.png" 
-       alt="Deutz Logo" style="width:100px; margin-bottom:5px;">
-  <h1> Serial# Barcode Generator</h1>
+  <img src="https://logoeps.com/wp-content/uploads/2012/11/deutz-logo-vector.png"
+       alt="Deutz Logo" style="width:150px; margin-bottom:10px;">
+  <h1>📷 Serial# Barcode</h1>
 
   <video id="camera" autoplay playsinline></video><br>
-<button id="startBtn">Start Camera</button>
-<button id="scanBtn">Scan</button><br><br>
+  <button id="startBtn">Start Camera</button>
+  <button id="scanBtn">Scan</button><br><br>
 
-<input type="text" id="numberInput" placeholder="Detected or enter number"><br>
-<button id="generateBtn">Generate Barcode</button>
-<button id="clearBtn">Clear</button>
+  <input type="text" id="numberInput" placeholder="Detected or enter number"><br>
+  <button id="generateBtn">Generate Barcode</button>
+  <button id="clearBtn">Clear</button>
 
   <svg id="barcode"></svg>
 
@@ -73,38 +75,29 @@
     const barcodeEl = document.getElementById('barcode');
     let stream;
 
-// Start camera (rear by default)
-document.getElementById('startBtn').addEventListener('click', async () => {
-  try {
-    const constraints = {
-      video: {
-        facingMode: { exact: "environment" } // Try rear camera
-      }
-    };
-    stream = await navigator.mediaDevices.getUserMedia(constraints);
-    video.srcObject = stream;
-  } catch (err) {
-    // Fallback if environment camera not available
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
-    } catch (error) {
-      alert('Camera access denied or not available.');
-    }
-  }
-});
-
-
-    // Stop camera
-    document.getElementById('stopBtn').addEventListener('click', () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
+    // Start camera (rear by default)
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      try {
+        const constraints = { video: { facingMode: { exact: "environment" } } };
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+      } catch (err) {
+        // fallback to any available camera
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+        } catch (error) {
+          alert('Camera access denied or not available.');
+        }
       }
     });
 
-    // OCR scan
+    // OCR scan for 215xxxxx pattern
     document.getElementById('scanBtn').addEventListener('click', async () => {
+      if (!video.srcObject) {
+        alert("Camera not started.");
+        return;
+      }
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -121,23 +114,22 @@ document.getElementById('startBtn').addEventListener('click', async () => {
       }
     });
 
-// Generate barcode and stop camera
-document.getElementById('generateBtn').addEventListener('click', () => {
-  const number = numberInput.value.trim();
-  if (number.match(/^215\d{5}$/)) {
-    generateBarcode(number);
-    // Stop camera after barcode is generated
-    setTimeout(() => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
+    // Generate barcode and stop camera
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const number = numberInput.value.trim();
+      if (number.match(/^215\d{5}$/)) {
+        generateBarcode(number);
+        // Stop camera after small delay
+        setTimeout(() => {
+          if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+          }
+        }, 500);
+      } else {
+        alert('Enter valid 8-digit number starting with 215');
       }
-    }, 500); // small delay ensures barcode renders first
-  } else {
-    alert('Enter valid 8-digit number starting with 215');
-  }
-});
-
+    });
 
     // Clear fields
     document.getElementById('clearBtn').addEventListener('click', () => {
@@ -145,7 +137,7 @@ document.getElementById('generateBtn').addEventListener('click', () => {
       barcodeEl.innerHTML = '';
     });
 
-    // Barcode function
+    // Barcode generator
     function generateBarcode(number) {
       JsBarcode(barcodeEl, number, {
         format: "CODE128",
@@ -159,9 +151,3 @@ document.getElementById('generateBtn').addEventListener('click', () => {
   </script>
 </body>
 </html>
-
-
-
-
-
-
