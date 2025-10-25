@@ -1,117 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phone Camera Barcode Scanner</title>
+  <meta charset="UTF-6" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Serial# Barcode Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; text-align:center; padding:20px; background:#f0f0f0; }
-    video { width:60%; max-width:250px; border:2px solid #333; border-radius:10px; margin-bottom:10px; }
-    input, button, select { padding:10px; margin:5px; font-size:1rem; border-radius:5px; }
-    #barcode { margin-top:20px; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #333;
+      margin-top: 5px;
+    }
+    video {
+      border: 2px solid #333;
+      border-radius: 10px;
+      width: 320px;
+      height: 180px;
+      object-fit: cover;
+      margin-top: 10px;
+    }
+    #barcode {
+      margin-top: 15px;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #d32f2f;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #b71c1c;
+    }
+    input {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 200px;
+      margin: 5px;
+    }
   </style>
 </head>
 <body>
-<img src="https://logoeps.com/wp-content/uploads/2012/11/deutz-logo-vector.png" alt="Deutz Logo" style="width:150px; margin-bottom:10px;">
-<h1>📷 Serial# Barcode</h1>
 
+  <img src="https://logoeps.com/wp-content/uploads/2012/11/deutz-logo-vector.png" 
+       alt="Deutz Logo" style="width:100px; margin-bottom:5px;">
+  <h1>📷 Serial# Barcode</h1>
 
+  <video id="camera" autoplay playsinline></video><br>
   <button id="startBtn">Start Camera</button>
-  <button id="stopBtn">Stop Camera</button><br>
-  <video id="video" autoplay playsinline></video><br>
-
-  <select id="facingSelect">
-    <option value="environment">Rear Camera</option>
-    <option value="user">Front Camera</option>
-  </select>
-  <button id="captureBtn">Capture & OCR</button><br>
+  <button id="stopBtn">Stop Camera</button>
+  <button id="scanBtn">Scan</button><br><br>
 
   <input type="text" id="numberInput" placeholder="Detected or enter number"><br>
-  <select id="formatSelect">
-    <option value="CODE128">Code 128</option>
-    <option value="EAN13">EAN-13</option>
-    <option value="UPC">UPC</option>
-    <option value="CODE39">Code 39</option>
-  </select>
   <button id="generateBtn">Generate Barcode</button>
   <button id="clearBtn">Clear</button>
-  <button id="downloadBtn">Download Barcode</button>
 
   <svg id="barcode"></svg>
-  <canvas id="captureCanvas" style="display:none;"></canvas>
-  <div id="ocrLog" style="margin-top:10px;"></div>
 
-  <script src="https://unpkg.com/tesseract.js@4.1.4/dist/tesseract.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <script>
-    const video = document.getElementById('video');
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const captureBtn = document.getElementById('captureBtn');
+    const video = document.getElementById('camera');
     const numberInput = document.getElementById('numberInput');
-    const generateBtn = document.getElementById('generateBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
     const barcodeEl = document.getElementById('barcode');
-    const canvas = document.getElementById('captureCanvas');
-    const facingSelect = document.getElementById('facingSelect');
-    const ocrLog = document.getElementById('ocrLog');
-
-    let stream = null;
+    let stream;
 
     // Start camera
-    startBtn.onclick = async () => {
-      if (stream) return;
+    document.getElementById('startBtn').addEventListener('click', async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingSelect.value } });
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
-        await video.play();
-      } catch (e) {
-        alert('Camera error: ' + e.message);
+      } catch (err) {
+        alert('Camera access denied or not available.');
       }
-    };
+    });
 
     // Stop camera
-    stopBtn.onclick = () => {
-      if (!stream) return;
-      stream.getTracks().forEach(track => track.stop());
-      video.srcObject = null;
-      stream = null;
-    };
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+      }
+    });
 
-    // OCR capture
-    captureBtn.onclick = async () => {
-      if (!stream) return alert('Camera not started');
+    // OCR scan
+    document.getElementById('scanBtn').addEventListener('click', async () => {
+      const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      ocrLog.textContent = 'Running OCR...';
-      ocrLog.style.color = 'black';
-      try {
-        const { data } = await Tesseract.recognize(canvas, 'eng');
-        const matches = data.text.match(/\b215[0-9]{5}\b/g) || [];
-        if (matches.length > 0) {
-          numberInput.value = matches[0];
-          ocrLog.textContent = '✅ Valid number detected!';
-          ocrLog.style.color = 'green';
-          generateBarcode(numberInput.value);
-        } else {
-          numberInput.value = '';
-          barcodeEl.innerHTML = '';
-          ocrLog.textContent = '❌ No valid 8-digit number starting with 215 found';
-          ocrLog.style.color = 'red';
-        }
-      } catch (e) {
-        ocrLog.textContent = 'OCR failed: ' + e.message;
-        ocrLog.style.color = 'red';
-      }
-    };
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Generate barcode function
+      const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
+      const match = text.match(/215\d{5}/); // matches 215 + 5 digits (total 8)
+      if (match) {
+        numberInput.value = match[0];
+        generateBarcode(match[0]);
+      } else {
+        alert('No valid 215xxxxx number detected.');
+      }
+    });
+
+    // Generate barcode
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const number = numberInput.value.trim();
+      if (number.match(/^215\d{5}$/)) {
+        generateBarcode(number);
+      } else {
+        alert('Enter valid 8-digit number starting with 215');
+      }
+    });
+
+    // Clear fields
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      numberInput.value = '';
+      barcodeEl.innerHTML = '';
+    });
+
+    // Barcode function
     function generateBarcode(number) {
       JsBarcode(barcodeEl, number, {
-        format: document.getElementById('formatSelect').value,
+        format: "CODE128",
         displayValue: true,
         fontSize: 18,
         width: 2,
@@ -119,51 +136,6 @@
         margin: 8
       });
     }
-
-    // Manual generate button
-    generateBtn.onclick = () => {
-      const val = numberInput.value;
-      if (!/^215\d{5}$/.test(val)) {
-        return alert('Number must start with 215 and be 8 digits long');
-      }
-      generateBarcode(val);
-    };
-
-    // Clear button
-    clearBtn.onclick = () => {
-      numberInput.value = '';
-      barcodeEl.innerHTML = '';
-      ocrLog.textContent = '';
-    };
-
-    // Download barcode button
-    downloadBtn.onclick = () => {
-      if (!barcodeEl.innerHTML) return alert('No barcode to download');
-      const svgData = new XMLSerializer().serializeToString(barcodeEl);
-      const canvasEl = document.createElement('canvas');
-      const ctx = canvasEl.getContext('2d');
-      const img = new Image();
-      const svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
-      const url = URL.createObjectURL(svgBlob);
-      img.onload = function() {
-        canvasEl.width = img.width;
-        canvasEl.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-        const pngUrl = canvasEl.toDataURL("image/png");
-        const a = document.createElement("a");
-        a.href = pngUrl;
-        a.download = numberInput.value + ".png";
-        a.click();
-      }
-      img.src = url;
-    };
   </script>
 </body>
 </html>
-
-
-
-
-
-
