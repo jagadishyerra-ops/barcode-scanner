@@ -92,27 +92,21 @@
       }
     });
 
-// OCR scan for 215xxxxx pattern
-document.getElementById('scanBtn').addEventListener('click', async () => {
-  if (!video.srcObject) {
-    alert("Camera not started.");
-    return;
-  }
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const context = canvas.getContext('2d');
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // OCR scan for 215xxxxx pattern
+    document.getElementById('scanBtn').addEventListener('click', async () => {
+      if (!video.srcObject) return; // if camera not started, silently ignore
 
-  const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
-  const match = text.match(/215\d{5}/); // matches 215 + 5 digits (total 8)
-if (match) {
-  numberInput.value = match[0];
-  alert('Number detected: ' + match[0]);
-} else {
-  alert('No valid 215xxxxx number detected.');
-}
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+      const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
+      const match = text.match(/215\d{5}/); // matches 215 + 5 digits (total 8)
+      if (match) {
+        numberInput.value = match[0]; // just fill text, no popup
+      }
     });
 
     // Generate barcode and stop camera
@@ -152,6 +146,7 @@ if (match) {
   </script>
 </body>
 </html>
+
 
 
 
