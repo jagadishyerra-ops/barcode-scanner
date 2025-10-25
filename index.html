@@ -59,12 +59,11 @@
 
   <video id="camera" autoplay playsinline></video><br>
 <button id="startBtn">Start Camera</button>
-<button id="scanBtn">Scan</button>
-<button id="stopBtn">Stop Camera</button><br><br>
+<button id="scanBtn">Scan</button><br><br>
 
-  <input type="text" id="numberInput" placeholder="Detected or enter number"><br>
-  <button id="generateBtn">Generate Barcode</button>
-  <button id="clearBtn">Clear</button>
+<input type="text" id="numberInput" placeholder="Detected or enter number"><br>
+<button id="generateBtn">Generate Barcode</button>
+<button id="clearBtn">Clear</button>
 
   <svg id="barcode"></svg>
 
@@ -122,15 +121,20 @@ document.getElementById('startBtn').addEventListener('click', async () => {
       }
     });
 
-    // Generate barcode
-    document.getElementById('generateBtn').addEventListener('click', () => {
-      const number = numberInput.value.trim();
-      if (number.match(/^215\d{5}$/)) {
-        generateBarcode(number);
-      } else {
-        alert('Enter valid 8-digit number starting with 215');
-      }
-    });
+// Generate barcode and stop camera
+document.getElementById('generateBtn').addEventListener('click', () => {
+  const number = numberInput.value.trim();
+  if (number.match(/^215\d{5}$/)) {
+    generateBarcode(number);
+    // Stop camera stream if active
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+    }
+  } else {
+    alert('Enter valid 8-digit number starting with 215');
+  }
+});
 
     // Clear fields
     document.getElementById('clearBtn').addEventListener('click', () => {
@@ -152,6 +156,7 @@ document.getElementById('startBtn').addEventListener('click', async () => {
   </script>
 </body>
 </html>
+
 
 
 
