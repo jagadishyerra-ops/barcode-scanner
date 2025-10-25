@@ -6,7 +6,7 @@
   <title>Phone Camera Barcode Scanner</title>
   <style>
     body { font-family: Arial, sans-serif; text-align:center; padding:20px; background:#f0f0f0; }
-    video { width:90%; max-width:400px; border:2px solid #333; border-radius:10px; }
+    video { width:90%; max-width:400px; border:2px solid #333; border-radius:10px; margin-bottom:10px; }
     input, button, select { padding:10px; margin:5px; font-size:1rem; border-radius:5px; }
     #barcode { margin-top:20px; }
   </style>
@@ -14,6 +14,7 @@
 <body>
   <h1>📷 Phone Camera Barcode Scanner & Generator</h1>
 
+  <button id="startBtn">Start Camera</button><br>
   <video id="video" autoplay playsinline></video><br>
 
   <select id="facingSelect">
@@ -41,6 +42,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <script>
     const video = document.getElementById('video');
+    const startBtn = document.getElementById('startBtn');
     const captureBtn = document.getElementById('captureBtn');
     const numberInput = document.getElementById('numberInput');
     const generateBtn = document.getElementById('generateBtn');
@@ -48,4 +50,27 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const barcodeEl = document.getElementById('barcode');
     const canvas = document.getElementById('captureCanvas');
-    const facingSe
+    const facingSelect = document.getElementById('facingSelect');
+    const ocrLog = document.getElementById('ocrLog');
+
+    let stream = null;
+
+    // Start camera on button click
+    startBtn.onclick = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingSelect.value } });
+        video.srcObject = stream;
+        startBtn.style.display = 'none'; // hide button after starting camera
+      } catch (e) {
+        alert('Camera error: ' + e.message);
+      }
+    };
+
+    // OCR capture
+    captureBtn.onclick = async () => {
+      if (!stream) return alert('Camera not started');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ocrLo
