@@ -14,7 +14,8 @@
 <body>
   <h1>📷 Phone Camera Barcode Scanner & Generator</h1>
 
-  <button id="startBtn">Start Camera</button><br>
+  <button id="startBtn">Start Camera</button>
+  <button id="stopBtn">Stop Camera</button><br>
   <video id="video" autoplay playsinline></video><br>
 
   <select id="facingSelect">
@@ -43,6 +44,7 @@
   <script>
     const video = document.getElementById('video');
     const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
     const captureBtn = document.getElementById('captureBtn');
     const numberInput = document.getElementById('numberInput');
     const generateBtn = document.getElementById('generateBtn');
@@ -55,18 +57,24 @@
 
     let stream = null;
 
-    // Start camera on button click (works reliably on mobile)
+    // Start camera
     startBtn.onclick = async () => {
+      if (stream) return;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: facingSelect.value }
-        });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingSelect.value } });
         video.srcObject = stream;
         await video.play();
-        startBtn.style.display = "none"; // hide button after starting
-      } catch (err) {
-        alert("Camera not available or permission denied: " + err.message);
+      } catch (e) {
+        alert('Camera error: ' + e.message);
       }
+    };
+
+    // Stop camera
+    stopBtn.onclick = () => {
+      if (!stream) return;
+      stream.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+      stream = null;
     };
 
     // OCR capture
@@ -77,4 +85,77 @@
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       ocrLog.textContent = 'Running OCR...';
-      o
+      ocrLog.style.color = 'black';
+      try {
+        const { data } = await Tesseract.recognize(canvas, 'eng');
+        const matches = data.text.match(/\b215[0-9]{5}\b/g) || [];
+        if (matches.length > 0) {
+          numberInput.value = matches[0];
+          ocrLog.textContent = '✅ Valid number detected!';
+          ocrLog.style.color = 'green';
+          generateBarcode(numberInput.value);
+        } else {
+          numberInput.value = '';
+          barcodeEl.innerHTML = '';
+          ocrLog.textContent = '❌ No valid 8-digit number starting with 215 found';
+          ocrLog.style.color = 'red';
+        }
+      } catch (e) {
+        ocrLog.textContent = 'OCR failed: ' + e.message;
+        ocrLog.style.color = 'red';
+      }
+    };
+
+    // Generate barcode function
+    function generateBarcode(number) {
+      JsBarcode(barcodeEl, number, {
+        format: document.getElementById('formatSelect').value,
+        displayValue: true,
+        fontSize: 18,
+        width: 2,
+        height: 80,
+        margin: 8
+      });
+    }
+
+    // Manual generate button
+    generateBtn.onclick = () => {
+      const val = numberInput.value;
+      if (!/^215\d{5}$/.test(val)) {
+        return alert('Number must start with 215 and be 8 digits long');
+      }
+      generateBarcode(val);
+    };
+
+    // Clear button
+    clearBtn.onclick = () => {
+      numberInput.value = '';
+      barcodeEl.innerHTML = '';
+      ocrLog.textContent = '';
+    };
+
+    // Download barcode button
+    downloadBtn.onclick = () => {
+      if (!barcodeEl.innerHTML) return alert('No barcode to download');
+      const svgData = new XMLSerializer().serializeToString(barcodeEl);
+      const canvasEl = document.createElement('canvas');
+      const ctx = canvasEl.getContext('2d');
+      const img = new Image();
+      const svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
+      const url = URL.createObjectURL(svgBlob);
+      img.onload = function() {
+        canvasEl.width = img.width;
+        canvasEl.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        const pngUrl = canvasEl.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = pngUrl;
+        a.download = numberInput.value + ".png";
+        a.click();
+      }
+      img.src = url;
+    };
+  </script>
+</body>
+</html>
