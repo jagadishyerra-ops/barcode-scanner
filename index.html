@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-6" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Serial# Barcode</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
@@ -10,22 +10,43 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 20px;
+      padding: 10px;
       background-color: #f4f4f4;
     }
     h1 {
       color: #333;
-      margin-top: 2px;
-      font-size: 20px;
+      margin-top: 5px;
+      font-size: 24px;
       font-weight: bold;
+    }
+    #cameraContainer {
+      position: relative;
+      display: inline-block;
     }
     video {
       border: 2px solid #333;
       border-radius: 10px;
       width: 320px;
-      height: 80px;
+      height: 120px;
       object-fit: cover;
-      margin-top: 6px;
+      margin-top: 10px;
+    }
+    /* Visual ROI scan box overlay */
+    #scanBox {
+      position: absolute;
+      border: 2px dashed #d32f2f;
+      width: 200px;
+      height: 100px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { border-color: #d32f2f; }
+      50% { border-color: #ff6666; }
+      100% { border-color: #d32f2f; }
     }
     #barcode {
       margin-top: 15px;
@@ -60,14 +81,17 @@
 <body>
 
   <img src="https://logoeps.com/wp-content/uploads/2012/11/deutz-logo-vector.png"
-       alt="Deutz Logo" style="width:100px; margin-bottom:10px;">
+       alt="Deutz Logo" style="width:100px; margin-bottom:4px;">
   <h1> Serial# Barcode Generator</h1>
 
-  <video id="camera" autoplay playsinline></video><br>
+  <div id="cameraContainer">
+    <video id="camera" autoplay playsinline></video>
+    <div id="scanBox"></div>
+  </div><br>
   <button id="startBtn">Start Camera</button>
   <button id="scanBtn">Scan</button><br><br>
 
-  <input type="text" id="numberInput" placeholder="Detected or enter number"><br>
+  <input type="tel" id="numberInput" placeholder="Scanned or Enter serial #"><br>
   <button id="generateBtn">Generate Barcode</button>
   <button id="clearBtn">Clear</button>
 
@@ -97,63 +121,10 @@
       }
     });
 
-    // OCR scan for 215xxxxx pattern
+    // OCR scan inside ROI
     document.getElementById('scanBtn').addEventListener('click', async () => {
-      if (!video.srcObject) return; // silently ignore if camera not started
+      if (!video.srcObject) return;
 
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
-      const match = text.match(/215\d{5}/); // 215 + 5 digits
-      if (match) {
-        numberInput.value = match[0]; // fill text, no popup
-      }
-    });
-
-    // Generate barcode and stop camera
-    document.getElementById('generateBtn').addEventListener('click', () => {
-      const number = numberInput.value.trim();
-      if (number.match(/^215\d{5}$/)) {
-        generateBarcode(number);
-
-        // Stop camera after small delay
-        setTimeout(() => {
-          if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            video.srcObject = null;
-          }
-        }, 500);
-
-        // Disable Start button until Clear is pressed
-        startBtn.disabled = true;
-      } else {
-        alert('Enter valid 8-digit number starting with 215');
-      }
-    });
-
-    // Clear fields and re-enable Start button
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      numberInput.value = '';
-      barcodeEl.innerHTML = '';
-      startBtn.disabled = false;
-    });
-
-    // Barcode generator
-    function generateBarcode(number) {
-      JsBarcode(barcodeEl, number, {
-        format: "CODE128",
-        displayValue: true,
-        fontSize: 18,
-        width: 2,
-        height: 80,
-        margin: 8
-      });
-    }
-  </script>
-</body>
-</html>
-
+      const roiWidth = 200;
+      const roiHeight = 100;
+      const startX = (video.v
