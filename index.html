@@ -6,12 +6,20 @@
   <title>Serial# Barcode</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 10px;
-      background-color: #f4f4f4;
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    background-color: #f4f4f4;
+    font-family: Arial, sans-serif;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* vertical center */
+    align-items: center;     /* horizontal center */
+    text-align: center;
+    padding: 10px;
     }
     h1 {
       color: #333;
@@ -187,6 +195,7 @@
   </script>
 </body>
 </html>
+
 
 
 
