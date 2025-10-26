@@ -92,16 +92,24 @@
        alt="Deutz Logo" style="width:80px; margin-bottom:8px;">
   <h1> Serial# Barcode Generator</h1>
 
-  <div id="cameraContainer">
-    <video id="camera" autoplay playsinline></video>
-    <div id="scanBox"></div>
-  </div><br>
-  <button id="startBtn">Start Camera</button>
-  <button id="scanBtn">Scan</button><br><br>
+<div id="cameraContainer">
+  <video id="camera" autoplay playsinline></video>
+  <div id="scanBox"></div>
+</div>
 
-  <input type="tel" id="numberInput" placeholder="Scanned or Enter Serial#"><br>
+<div class="button-row">
+  <button id="startBtn">Start Camera</button>
+  <button id="scanBtn">Scan</button>
+</div>
+
+<div class="input-row">
+  <input type="tel" id="numberInput" placeholder="Detected or enter number">
+</div>
+
+<div class="button-row">
   <button id="generateBtn">Generate Barcode</button>
   <button id="clearBtn">Clear</button>
+</div>
 
   <svg id="barcode"></svg>
 
@@ -195,6 +203,7 @@
   </script>
 </body>
 </html>
+
 
 
 
