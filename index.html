@@ -81,7 +81,7 @@
 <body>
 
   <img src="https://logoeps.com/wp-content/uploads/2012/11/deutz-logo-vector.png"
-       alt="Deutz Logo" style="width:150px; margin-bottom:10px;">
+       alt="Deutz Logo" style="width:80px; margin-bottom:8px;">
   <h1> Serial# Barcode Generator</h1>
 
   <div id="cameraContainer">
@@ -102,6 +102,8 @@
     const numberInput = document.getElementById('numberInput');
     const barcodeEl = document.getElementById('barcode');
     const startBtn = document.getElementById('startBtn');
+    const scanBtn = document.getElementById('scanBtn');
+    const clearBtn = document.getElementById('clearBtn');
     let stream;
 
     // Start camera (rear by default)
@@ -138,7 +140,10 @@
 
       const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
       const match = text.match(/215\d{5}/);
-      if (match) numberInput.value = match[0];
+   if (match) {
+        numberInput.value = match[0];
+        scanBtn.disabled = true; // ✅ Disable Scan button when valid number detected
+      }
     });
 
     // Generate barcode and stop camera
@@ -165,6 +170,7 @@
       numberInput.value = '';
       barcodeEl.innerHTML = '';
       startBtn.disabled = false;
+      scanBtn.disabled = false; // ✅ Re-enable Scan button
     });
 
     // Barcode generator
@@ -181,5 +187,6 @@
   </script>
 </body>
 </html>
+
 
 
