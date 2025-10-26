@@ -10,13 +10,13 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 10px;
+      padding: 20px;
       background-color: #f4f4f4;
     }
     h1 {
       color: #333;
       margin-top: 5px;
-      font-size: 24px;
+      font-size: 28px;
       font-weight: bold;
     }
     #cameraContainer {
@@ -27,7 +27,7 @@
       border: 2px solid #333;
       border-radius: 10px;
       width: 320px;
-      height: 120px;
+      height: 240px;
       object-fit: cover;
       margin-top: 10px;
     }
@@ -81,8 +81,8 @@
 <body>
 
   <img src="https://logoeps.com/wp-content/uploads/2012/11/deutz-logo-vector.png"
-       alt="Deutz Logo" style="width:100px; margin-bottom:4px;">
-  <h1> Serial# Barcode Generator</h1>
+       alt="Deutz Logo" style="width:150px; margin-bottom:10px;">
+  <h1>📷 Serial# Barcode</h1>
 
   <div id="cameraContainer">
     <video id="camera" autoplay playsinline></video>
@@ -91,7 +91,7 @@
   <button id="startBtn">Start Camera</button>
   <button id="scanBtn">Scan</button><br><br>
 
-  <input type="tel" id="numberInput" placeholder="Scanned or Enter serial #"><br>
+  <input type="tel" id="numberInput" placeholder="Detected or enter number"><br>
   <button id="generateBtn">Generate Barcode</button>
   <button id="clearBtn">Clear</button>
 
@@ -127,4 +127,57 @@
 
       const roiWidth = 200;
       const roiHeight = 100;
-      const startX = (video.v
+      const startX = (video.videoWidth - roiWidth) / 2;
+      const startY = (video.videoHeight - roiHeight) / 2;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = roiWidth;
+      canvas.height = roiHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(video, startX, startY, roiWidth, roiHeight, 0, 0, roiWidth, roiHeight);
+
+      const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
+      const match = text.match(/215\d{5}/);
+      if (match) numberInput.value = match[0];
+    });
+
+    // Generate barcode and stop camera
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const number = numberInput.value.trim();
+      if (number.match(/^215\d{5}$/)) {
+        generateBarcode(number);
+
+        setTimeout(() => {
+          if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+          }
+        }, 500);
+
+        startBtn.disabled = true;
+      } else {
+        alert('Enter valid 8-digit number starting with 215');
+      }
+    });
+
+    // Clear input & barcode, re-enable Start
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      numberInput.value = '';
+      barcodeEl.innerHTML = '';
+      startBtn.disabled = false;
+    });
+
+    // Barcode generator
+    function generateBarcode(number) {
+      JsBarcode(barcodeEl, number, {
+        format: "CODE128",
+        displayValue: true,
+        fontSize: 18,
+        width: 2,
+        height: 80,
+        margin: 8
+      });
+    }
+  </script>
+</body>
+</html>
