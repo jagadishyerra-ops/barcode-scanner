@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-4" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Serial# Barcode</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
@@ -10,13 +10,13 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 20px;
+      padding: 10px;
       background-color: #f4f4f4;
     }
     h1 {
       color: #333;
       margin-top: 5px;
-      font-size: 28px;
+      font-size: 20px;
       font-weight: bold;
     }
     #cameraContainer {
@@ -27,7 +27,7 @@
       border: 2px solid #333;
       border-radius: 10px;
       width: 320px;
-      height: 240px;
+      height: 120px;
       object-fit: cover;
       margin-top: 10px;
     }
@@ -36,7 +36,7 @@
       position: absolute;
       border: 2px dashed #d32f2f;
       width: 200px;
-      height: 100px;
+      height: 80px;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
@@ -82,7 +82,7 @@
 
   <img src="https://logoeps.com/wp-content/uploads/2012/11/deutz-logo-vector.png"
        alt="Deutz Logo" style="width:150px; margin-bottom:10px;">
-  <h1>📷 Serial# Barcode</h1>
+  <h1> Serial# Barcode Generator</h1>
 
   <div id="cameraContainer">
     <video id="camera" autoplay playsinline></video>
@@ -91,7 +91,7 @@
   <button id="startBtn">Start Camera</button>
   <button id="scanBtn">Scan</button><br><br>
 
-  <input type="tel" id="numberInput" placeholder="Detected or enter number"><br>
+  <input type="tel" id="numberInput" placeholder="Scanned or Enter Serial#"><br>
   <button id="generateBtn">Generate Barcode</button>
   <button id="clearBtn">Clear</button>
 
@@ -181,3 +181,4 @@
   </script>
 </body>
 </html>
+
